@@ -3,13 +3,15 @@
 #include <string>
 #include <optional>
 
-int main() {
+int main()
+{
     // 1. Crear la ventana (Sintaxis SFML 3 con llaves para VideoMode)
     sf::RenderWindow window(sf::VideoMode({800, 600}), "Contador de Clicks - SFML 3");
 
     // 2. Cargar la fuente (En SFML 3 es openFromFile)
     sf::Font font;
-    if (!font.openFromFile("arial.ttf")) {
+    if (!font.openFromFile("arial.ttf"))
+    {
         std::cerr << "Error: Coloca un archivo 'arial.ttf' junto al ejecutable." << std::endl;
         // No retornamos -1 para que al menos veas el triangulo si no hay fuente
     }
@@ -31,38 +33,53 @@ int main() {
     triangulo.setPosition({400.f, 300.f});
 
     // Bucle principal
-    while (window.isOpen()) {
+    while (window.isOpen())
+    {
         // --- PROCESAR EVENTOS (Estilo SFML 3) ---
-        while (const std::optional<sf::Event> event = window.pollEvent()) {
-            
+        while (const std::optional<sf::Event> event = window.pollEvent())
+        {
+
             // Cerrar ventana
-            if (event->is<sf::Event::Closed>()) {
+            if (event->is<sf::Event::Closed>())
+            {
                 window.close();
             }
 
             // Detectar Clic
-            if (const auto* mouseClick = event->getIf<sf::Event::MouseButtonPressed>()) {
-                if (mouseClick->button == sf::Mouse::Button::Left) {
+            if (const auto *mouseClick = event->getIf<sf::Event::MouseButtonPressed>())
+            {
+                if (mouseClick->button == sf::Mouse::Button::Left)
+                {
                     contador++;
                     texto.setString("Clicks: " + std::to_string(contador));
-                    
+
                     // Efecto visual: cambiar color al hacer click
                     triangulo.setFillColor(sf::Color::Yellow);
                 }
             }
-            
+            if (const auto *keyPressed = event->getIf<sf::Event::KeyPressed>())
+            {
+                if (keyPressed->code == sf::Keyboard::Key::R)
+                {
+                    contador = 0;
+                    texto.setString("Clicks: " + std::to_string(contador));
+                    std::cout << "Contador reiniciado!" << std::endl;
+                }
+            }
+
             // Volver al color original al soltar el click
-            if (event->is<sf::Event::MouseButtonReleased>()) {
+            if (event->is<sf::Event::MouseButtonReleased>())
+            {
                 triangulo.setFillColor(sf::Color::Green);
             }
         }
 
         // --- RENDERIZADO ---
         window.clear(sf::Color::Black);
-        
+
         window.draw(triangulo);
         window.draw(texto);
-        
+
         window.display();
     }
 
