@@ -3,83 +3,87 @@
 #include <string>
 #include <optional>
 
-int main()
-{
-    // 1. Crear la ventana (Sintaxis SFML 3 con llaves para VideoMode)
-    sf::RenderWindow window(sf::VideoMode({800, 600}), "Contador de Clicks - SFML 3");
+int main() {
+    sf::RenderWindow window(sf::VideoMode({800, 600}), "Modo Magico Temporal");
 
-    // 2. Cargar la fuente (En SFML 3 es openFromFile)
     sf::Font font;
-    if (!font.openFromFile("arial.ttf"))
-    {
-        std::cerr << "Error: Coloca un archivo 'arial.ttf' junto al ejecutable." << std::endl;
-        // No retornamos -1 para que al menos veas el triangulo si no hay fuente
+    if (!font.openFromFile("arial.ttf")) {
+        std::cerr << "Error: No se pudo cargar arial.ttf" << std::endl;
     }
 
-    // 3. Configurar el Texto
     int contador = 0;
-    sf::Text texto(font);
-    texto.setString("Clicks: 0");
-    texto.setCharacterSize(40);
+    
+    sf::Text texto(font, "Clicks: 0", 40);
+    sf::Text mensajeModoMagico(font, "¡Modo Mágico Activado!", 30);
     texto.setFillColor(sf::Color::White);
     texto.setPosition({20.f, 20.f});
+    mensajeModoMagico.setFillColor(sf::Color::Magenta);
+    mensajeModoMagico.setPosition({20.f, 70.f});
 
-    // 4. Configurar el Triángulo
     sf::CircleShape triangulo(80.f, 3);
     triangulo.setFillColor(sf::Color::Green);
     triangulo.setOutlineThickness(5.f);
     triangulo.setOutlineColor(sf::Color::Red);
-    triangulo.setOrigin({80.f, 80.f}); // Centrar el origen
+    triangulo.setOrigin({80.f, 80.f});
     triangulo.setPosition({400.f, 300.f});
 
-    // Bucle principal
-    while (window.isOpen())
-    {
-        // --- PROCESAR EVENTOS (Estilo SFML 3) ---
-        while (const std::optional<sf::Event> event = window.pollEvent())
-        {
+    // --- VARIABLES PARA EL MODO MAGICO ---
+    sf::Clock relojMagico;
+    bool modoMagicoActivo = false;
 
-            // Cerrar ventana
-            if (event->is<sf::Event::Closed>())
-            {
+    while (window.isOpen()) {
+        while (const std::optional<sf::Event> event = window.pollEvent()) {
+            if (event->is<sf::Event::Closed>()) {
                 window.close();
             }
 
-            // Detectar Clic
-            if (const auto *mouseClick = event->getIf<sf::Event::MouseButtonPressed>())
-            {
-                if (mouseClick->button == sf::Mouse::Button::Left)
-                {
+            // Click del mouse
+            if (const auto* mouseClick = event->getIf<sf::Event::MouseButtonPressed>()) {
+                if (mouseClick->button == sf::Mouse::Button::Left) {
                     contador++;
                     texto.setString("Clicks: " + std::to_string(contador));
-
-                    // Efecto visual: cambiar color al hacer click
-                    triangulo.setFillColor(sf::Color::Yellow);
+                    // Solo cambia a amarillo si NO estamos en modo mágico
+                    if (!modoMagicoActivo) triangulo.setFillColor(sf::Color::Yellow);
                 }
             }
-            if (const auto *keyPressed = event->getIf<sf::Event::KeyPressed>())
-            {
-                if (keyPressed->code == sf::Keyboard::Key::R)
-                {
+
+            if (event->is<sf::Event::MouseButtonReleased>()) {
+                if (!modoMagicoActivo) triangulo.setFillColor(sf::Color::Green);
+            }
+
+            // Teclado
+            if (const auto* keyPressed = event->getIf<sf::Event::KeyPressed>()) {
+                if (keyPressed->code == sf::Keyboard::Key::R) {
                     contador = 0;
                     texto.setString("Clicks: " + std::to_string(contador));
-                    std::cout << "Contador reiniciado!" << std::endl;
                 }
-            }
-
-            // Volver al color original al soltar el click
-            if (event->is<sf::Event::MouseButtonReleased>())
-            {
-                triangulo.setFillColor(sf::Color::Green);
+                
+                if (keyPressed->code == sf::Keyboard::Key::M) {
+                    std::cout << "¡Modo Mágico Activado por 2 segundos!" << std::endl;
+                    triangulo.setFillColor(sf::Color::Magenta);
+                    mensajeModoMagico.setString("Modo Magico Activado");
+                    modoMagicoActivo = true;
+                    relojMagico.restart(); // Empezamos a contar los 2 segundos
+                }
             }
         }
 
-        // --- RENDERIZADO ---
-        window.clear(sf::Color::Black);
+        // --- LÓGICA TEMPORAL (Fuera del pollEvent) ---
+        if (modoMagicoActivo) {
+            // Si el tiempo transcurrido es mayor a 2 segundos
+            if (relojMagico.getElapsedTime() >= sf::seconds(2.0f)) {
+                modoMagicoActivo = false;
+                triangulo.setFillColor(sf::Color::Green); // Volver al estado previo
+                std::cout << "Modo Mágico Finalizado." << std::endl;
+            }
+        }
 
+        window.clear(sf::Color::Black);
         window.draw(triangulo);
         window.draw(texto);
-
+        if (modoMagicoActivo) {
+            window.draw(mensajeModoMagico);
+        }
         window.display();
     }
 
